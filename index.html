@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>동아리 일정 공유</title>
+</head>
+
+<body>
+
+    <h1>동아리 일정 공유</h1>
+
+    <!-- 로그인 영역 -->
+    <div id="loginArea">
+
+        <h3>이름 입력</h3>
+
+        <input type="text" id="nameInput" placeholder="이름 입력">
+
+        <button onclick="saveName()">로그인</button>
+
+    </div>
+
+    <!-- 할 일 영역 -->
+    <div id="taskArea" style="display:none;">
+
+        <h3 id="welcomeText"></h3>
+
+        <input type="text" id="taskInput" placeholder="할 일 입력">
+
+        <button onclick="addTask()">추가</button>
+
+        <ul id="taskList"></ul>
+
+    </div>
+
+    <script>
+
+        // 서버 주소
+        const SERVER_URL = 'http://10.181.136.82:3000';
+
+        // 현재 사용자 이름
+        let currentUser = '';
+
+
+
+        // 이름 저장
+        function saveName() {
+
+            const input = document.getElementById('nameInput');
+
+            if(input.value.trim() === '') return;
+
+            localStorage.setItem('username', input.value);
+
+            currentUser = input.value;
+
+            showTaskArea();
+
+        }
+
+
+
+        // 로그인 확인
+        function checkLogin() {
+
+            const savedName = localStorage.getItem('username');
+
+            if(savedName) {
+
+                currentUser = savedName;
+
+                showTaskArea();
+
+            }
+
+        }
+
+
+
+        // 할 일 화면 표시
+        function showTaskArea() {
+
+            document.getElementById('loginArea').style.display = 'none';
+
+            document.getElementById('taskArea').style.display = 'block';
+
+            document.getElementById('welcomeText').innerText =
+                currentUser + "님 환영합니다";
+
+            loadTasks();
+
+        }
+
+
+
+        // 목록 불러오기
+        async function loadTasks() {
+
+            const response = await fetch(`${SERVER_URL}/tasks`);
+
+            const tasks = await response.json();
+
+            const list = document.getElementById('taskList');
+
+            list.innerHTML = '';
+
+            tasks.forEach(task => {
+
+                const li = document.createElement('li');
+
+                li.innerText =
+                    `[${task.author}] ${task.title} (${task.status}) `;
+
+
+
+                // 완료 버튼
+                const doneButton = document.createElement('button');
+
+                doneButton.innerText = '완료';
+
+                doneButton.onclick = async () => {
+
+                    await fetch(`${SERVER_URL}/tasks/${task.id}`, {
+
+                        method: 'PUT',
+
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+
+                        body: JSON.stringify({
+                            status: 'DONE'
+                        })
+
+                    });
+
+                    loadTasks();
+
+                };
+
+                li.appendChild(doneButton);
+
+
+
+                // 삭제 버튼
+                const deleteButton = document.createElement('button');
+
+                deleteButton.innerText = '삭제';
+
+                deleteButton.onclick = async () => {
+
+                    await fetch(`${SERVER_URL}/tasks/${task.id}`, {
+
+                        method: 'DELETE'
+
+                    });
+
+                    loadTasks();
+
+                };
+
+                li.appendChild(deleteButton);
+
+
+
+                list.appendChild(li);
+
+            });
+
+        }
+
+
+
+        // 할 일 추가
+        async function addTask() {
+
+            const input = document.getElementById('taskInput');
+
+            if(input.value.trim() === '') return;
+
+            await fetch(`${SERVER_URL}/tasks`, {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+
+                    title: input.value,
+                    author: currentUser
+
+                })
+
+            });
+
+            input.value = '';
+
+            loadTasks();
+
+        }
+
+
+
+        // 시작 시 로그인 체크
+        checkLogin();
+
+    </script>
+
+</body>
+
+</html>
