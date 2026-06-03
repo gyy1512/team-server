@@ -1,214 +1,395 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 
 <head>
-    <meta charset="UTF-8">
-    <title>동아리 일정 공유</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>동아리 일정 공유</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Segoe UI', sans-serif;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.container{
+    width:100%;
+    max-width:700px;
+    background:white;
+    border-radius:20px;
+    padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+    color:#333;
+}
+
+h3{
+    margin-bottom:15px;
+    color:#444;
+}
+
+input{
+    width:70%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    font-size:16px;
+}
+
+button{
+    padding:12px 18px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    color:white;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+.loginBtn{
+    background:#667eea;
+}
+
+.addBtn{
+    background:#28a745;
+}
+
+.doneBtn{
+    background:#17a2b8;
+    margin-left:10px;
+}
+
+.deleteBtn{
+    background:#dc3545;
+    margin-left:5px;
+}
+
+#welcomeText{
+    margin-bottom:20px;
+    color:#555;
+}
+
+.taskInputArea{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+#taskList{
+    list-style:none;
+}
+
+.task-card{
+    background:#f8f9fa;
+    border-left:5px solid #667eea;
+    padding:10px;
+    margin-bottom:15px;
+    border-radius:10px;
+}
+
+.task-title{
+    font-size:17px;
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+.task-info{
+    color:#666;
+    margin-bottom:10px;
+}
+
+.status-todo{
+    color:#ff9800;
+    font-weight:bold;
+}
+
+.status-done{
+    color:#28a745;
+    font-weight:bold;
+}
+
+</style>
+
 </head>
 
 <body>
 
-    <h1>동아리 일정 공유</h1>
+<div class="container">
 
-    <!-- 로그인 영역 -->
+    <h1>📅 동아리 일정 공유</h1>
+
+    <!-- 로그인 -->
     <div id="loginArea">
 
         <h3>이름 입력</h3>
 
-        <input type="text" id="nameInput" placeholder="이름 입력">
+        <input type="text"
+               id="nameInput"
+               placeholder="이름 입력">
 
-        <button onclick="saveName()">로그인</button>
-
-    </div>
-
-    <!-- 할 일 영역 -->
-    <div id="taskArea" style="display:none;">
-
-        <h3 id="welcomeText"></h3>
-
-        <input type="text" id="taskInput" placeholder="할 일 입력">
-
-        <button onclick="addTask()">추가</button>
-
-        <ul id="taskList"></ul>
+        <button class="loginBtn"
+                onclick="saveName()">
+            로그인
+        </button>
 
     </div>
 
-    <script>
+    <!-- 일정 영역 -->
+<div id="taskArea" style="display:none;">
 
-        // 서버 주소
-        const SERVER_URL = 'http://10.181.136.82:3000';
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">
 
-        // 현재 사용자 이름
-        let currentUser = '';
+        <h3 id="welcomeText" style="flex:1;"></h3>
+
+        <button class="doneBtn" onclick="changeName()">
+            닉네임 변경
+        </button>
+
+        <button class="deleteBtn" onclick="logout()">
+            로그아웃
+        </button>
+
+    </div>
+
+    <div class="taskInputArea">
+
+        <input type="text"
+               id="taskInput"
+               placeholder="할 일을 입력하세요">
+
+        <button class="addBtn"
+                onclick="addTask()">
+            추가
+        </button>
+
+    </div>
+
+    <ul id="taskList"></ul>
+
+</div>
+
+<script>
+
+const SERVER_URL = '';
+
+let currentUser = '';
+
+function saveName() {
+
+    const input = document.getElementById('nameInput');
+
+    if(input.value.trim() === '') return;
+
+    localStorage.setItem('username', input.value);
+
+    currentUser = input.value;
+
+    showTaskArea();
+}
+
+function checkLogin() {
+
+    const savedName = localStorage.getItem('username');
+
+    if(savedName){
+
+        currentUser = savedName;
+
+        showTaskArea();
+    }
+}
+function changeName() {
+
+    const newName =
+        prompt("새 닉네임을 입력하세요");
+
+    if(!newName || newName.trim() === '')
+        return;
+
+    currentUser = newName.trim();
+
+    localStorage.setItem(
+        'username',
+        currentUser
+    );
+
+    document.getElementById(
+        'welcomeText'
+    ).innerText =
+        currentUser + "님 환영합니다 👋";
+}
 
 
+function logout() {
 
-        // 이름 저장
-        function saveName() {
+    localStorage.removeItem(
+        'username'
+    );
 
-            const input = document.getElementById('nameInput');
+    location.reload();
+}
 
-            if(input.value.trim() === '') return;
+function showTaskArea() {
 
-            localStorage.setItem('username', input.value);
+    document.getElementById('loginArea').style.display='none';
 
-            currentUser = input.value;
+    document.getElementById('taskArea').style.display='block';
 
-            showTaskArea();
+    document.getElementById('welcomeText').innerText =
+        currentUser + "님 환영합니다 👋";
 
-        }
+    loadTasks();
+}
 
+async function loadTasks() {
 
+    try{
 
-        // 로그인 확인
-        function checkLogin() {
+        const response =
+            await fetch(`${SERVER_URL}/tasks`);
 
-            const savedName = localStorage.getItem('username');
+        const tasks =
+            await response.json();
 
-            if(savedName) {
+        const list =
+            document.getElementById('taskList');
 
-                currentUser = savedName;
+        list.innerHTML='';
 
-                showTaskArea();
+        tasks.forEach(task => {
 
-            }
+            const li =
+                document.createElement('li');
 
-        }
+            li.className = 'task-card';
 
+            const statusClass =
+                task.status === 'DONE'
+                ? 'status-done'
+                : 'status-todo';
 
+            li.innerHTML = `
+                <div class="task-title">
+                    ${task.title}
+                </div>
 
-        // 할 일 화면 표시
-        function showTaskArea() {
+                <div class="task-info">
+                    작성자 : ${task.author}
+                </div>
 
-            document.getElementById('loginArea').style.display = 'none';
+                <div class="${statusClass}" style="margin-bottom:15px;">
+    상태 : ${task.status}
+</div>
+            `;
 
-            document.getElementById('taskArea').style.display = 'block';
+            const doneButton =
+                document.createElement('button');
 
-            document.getElementById('welcomeText').innerText =
-                currentUser + "님 환영합니다";
+            doneButton.innerText='완료';
+            doneButton.className='doneBtn';
 
-            loadTasks();
+            doneButton.onclick = async () => {
 
-        }
-
-
-
-        // 목록 불러오기
-        async function loadTasks() {
-
-            const response = await fetch(`${SERVER_URL}/tasks`);
-
-            const tasks = await response.json();
-
-            const list = document.getElementById('taskList');
-
-            list.innerHTML = '';
-
-            tasks.forEach(task => {
-
-                const li = document.createElement('li');
-
-                li.innerText =
-                    `[${task.author}] ${task.title} (${task.status}) `;
-
-
-
-                // 완료 버튼
-                const doneButton = document.createElement('button');
-
-                doneButton.innerText = '완료';
-
-                doneButton.onclick = async () => {
-
-                    await fetch(`${SERVER_URL}/tasks/${task.id}`, {
-
-                        method: 'PUT',
-
-                        headers: {
-                            'Content-Type': 'application/json'
+                await fetch(
+                    `${SERVER_URL}/tasks/${task.id}`,
+                    {
+                        method:'PUT',
+                        headers:{
+                            'Content-Type':'application/json'
                         },
-
-                        body: JSON.stringify({
-                            status: 'DONE'
+                        body:JSON.stringify({
+                            status:'DONE'
                         })
+                    }
+                );
 
-                    });
+                loadTasks();
+            };
 
-                    loadTasks();
+            li.appendChild(doneButton);
 
-                };
+            const deleteButton =
+                document.createElement('button');
 
-                li.appendChild(doneButton);
+            deleteButton.innerText='삭제';
+            deleteButton.className='deleteBtn';
 
+            deleteButton.onclick = async () => {
 
+                await fetch(
+                    `${SERVER_URL}/tasks/${task.id}`,
+                    {
+                        method:'DELETE'
+                    }
+                );
 
-                // 삭제 버튼
-                const deleteButton = document.createElement('button');
+                loadTasks();
+            };
 
-                deleteButton.innerText = '삭제';
+            li.appendChild(deleteButton);
 
-                deleteButton.onclick = async () => {
+            list.appendChild(li);
+        });
 
-                    await fetch(`${SERVER_URL}/tasks/${task.id}`, {
+    }catch(error){
 
-                        method: 'DELETE'
+        alert('서버 연결 실패');
+    }
+}
 
-                    });
+async function addTask() {
 
-                    loadTasks();
+    const input =
+        document.getElementById('taskInput');
 
-                };
+    if(input.value.trim()==='') return;
 
-                li.appendChild(deleteButton);
+    await fetch(`${SERVER_URL}/tasks`,{
 
+        method:'POST',
 
+        headers:{
+            'Content-Type':'application/json'
+        },
 
-                list.appendChild(li);
+        body:JSON.stringify({
 
-            });
+            title:input.value,
+            author:currentUser
 
-        }
+        })
 
+    });
 
+    input.value='';
 
-        // 할 일 추가
-        async function addTask() {
+    loadTasks();
+}
 
-            const input = document.getElementById('taskInput');
+checkLogin();
 
-            if(input.value.trim() === '') return;
-
-            await fetch(`${SERVER_URL}/tasks`, {
-
-                method: 'POST',
-
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-
-                body: JSON.stringify({
-
-                    title: input.value,
-                    author: currentUser
-
-                })
-
-            });
-
-            input.value = '';
-
-            loadTasks();
-
-        }
-
-
-
-        // 시작 시 로그인 체크
-        checkLogin();
-
-    </script>
+</script>
 
 </body>
-
 </html>
